@@ -1,20 +1,21 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔬 Научные объединения</title>
+    <title>Научные кружки</title>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
-            padding: 16px;
+            padding: 20px;
             background: #f5f5f5;
             color: #000;
         }
         h1 {
             font-size: 24px;
             margin-bottom: 20px;
+            color: #333;
         }
         .card {
             background: white;
@@ -27,6 +28,7 @@
             font-size: 18px;
             font-weight: 600;
             margin-bottom: 8px;
+            color: #000;
         }
         .type {
             display: inline-block;
@@ -49,88 +51,94 @@
             margin-top: 12px;
             font-size: 14px;
             line-height: 1.4;
+            color: #444;
         }
         .contacts {
             margin-top: 12px;
             font-size: 13px;
             color: #666;
         }
-        .error {
-            color: red;
-            font-weight: bold;
+        #debug {
+            background: #ffebee;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #c62828;
+            display: none;
+            white-space: pre-wrap;
+            font-family: monospace;
         }
     </style>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
+    <div id="debug"></div>
     <h1>🔬 Научные объединения</h1>
     <div id="container">Загрузка...</div>
 
     <script>
-        (function() {
-            // Перехват ошибок и вывод на экран
-            window.onerror = function(msg, url, line) {
-                document.getElementById('container').innerHTML = 
-                    '<p class="error">❌ Ошибка: ' + msg + '<br>на строке ' + line + '</p>';
-                return true;
-            };
+        // Функция для отображения ошибок на странице
+        function showError(text) {
+            const debug = document.getElementById('debug');
+            debug.style.display = 'block';
+            debug.textContent = '❌ Ошибка: ' + text;
+        }
 
-            const tg = window.Telegram?.WebApp;
-            if (tg) {
-                tg.expand();
-            } else {
-                console.warn('Telegram WebApp не доступен, работаем вне Telegram');
+        // Отлавливаем все непойманные ошибки
+        window.onerror = function(msg, url, line) {
+            showError(msg + ' на строке ' + line);
+            return true;
+        };
+
+        // Проверяем, загрузился ли Telegram API
+        if (typeof Telegram === 'undefined') {
+            showError('Telegram API не загрузился. Проверь подключение.');
+        } else {
+            try {
+                Telegram.WebApp.expand();
+                console.log('Telegram WebApp расширен');
+            } catch (e) {
+                showError('Ошибка при расширении Telegram WebApp: ' + e.message);
             }
+        }
 
-            // Функция загрузки данных
-            async function loadData() {
-                const container = document.getElementById('container');
-                try {
-                    // Пытаемся загрузить data.json с абсолютным путём (на случай поддомена)
-                    const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/');
-                    const response = await fetch(baseUrl + 'data.json');
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-                    const data = await response.json();
-                    
-                    container.innerHTML = '';
-                    if (!data || data.length === 0) {
-                        container.innerHTML = '<p>Пока нет кружков 😢</p>';
-                        return;
-                    }
-
-                    data.forEach(union => {
-                        const card = document.createElement('div');
-                        card.className = 'card';
-                        card.innerHTML = `
-                            <div class="title">${escapeHtml(union.name || 'Без названия')}</div>
-                            <span class="type">${escapeHtml(union.type || 'Тип')}</span>
-                            <span class="direction">${escapeHtml(union.direction || 'Направление')}</span>
-                            <div class="description">${escapeHtml(union.description || '')}</div>
-                            <div class="contacts">👤 ${escapeHtml(union.contacts || '')}</div>
-                        `;
-                        container.appendChild(card);
-                    });
-                } catch (error) {
-                    container.innerHTML = `<p class="error">❌ Ошибка загрузки: ${escapeHtml(error.message)}</p>`;
-                    console.error(error);
+        // Загружаем данные
+        async function loadData() {
+            try {
+                const response = await fetch('data.json?' + Date.now()); // Добавляем timestamp, чтобы избежать кэша
+                if (!response.ok) {
+                    throw new Error(`HTTP ошибка ${response.status}`);
                 }
-            }
+                const data = await response.json();
+                console.log('Данные загружены:', data);
 
-            // Простейшая защита от XSS
-            function escapeHtml(unsafe) {
-                if (!unsafe) return '';
-                return unsafe
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#039;');
-            }
+                const container = document.getElementById('container');
+                container.innerHTML = '';
 
-            loadData();
-        })();
+                if (!data || data.length === 0) {
+                    container.innerHTML = 'Пока нет кружков 😢';
+                    return;
+                }
+
+                data.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <div class="title">${item.name || 'Без названия'}</div>
+                        <span class="type">${item.type || 'Не указан'}</span>
+                        <span class="direction">${item.direction || 'Не указано'}</span>
+                        <div class="description">${item.description || 'Описание отсутствует'}</div>
+                        <div class="contacts">👤 ${item.contacts || 'Нет контактов'}</div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
+                showError('Не удалось загрузить данные: ' + error.message);
+            }
+        }
+
+        loadData();
     </script>
 </body>
 </html>
