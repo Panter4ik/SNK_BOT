@@ -11,17 +11,42 @@
         .type { background: #40a7e3; color: white; padding: 4px 8px; border-radius: 6px; font-size: 12px; display: inline-block; margin-right: 8px; }
         .direction { background: #e0e0e0; padding: 4px 8px; border-radius: 6px; font-size: 12px; display: inline-block; }
     </style>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- НЕТ ПОДКЛЮЧЕНИЯ ВНЕШНИХ СКРИПТОВ -->
 </head>
 <body>
     <h1>🔬 Научные объединения</h1>
     <div id="container"></div>
+
     <script>
-        const tg = Telegram.WebApp;
-        tg.expand();
-        const data = [{"name": "СНК \"Программирование Python\"", "type": "СНК", "direction": "Программирование", "description": "Изучаем Python, создаём проекты, участвуем в хакатонах", "contacts": "@python_professor"}, {"name": "СНО \"Молекулярная биология\"", "type": "СНО", "direction": "Биология", "description": "Исследования в области биологии, работа в лабораториях", "contacts": "@bio_researcher"}, {"name": "СНК \"Квантовая физика\"", "type": "СНК", "direction": "Физика", "description": "Изучение квантовых явлений, эксперименты", "contacts": "@quantum_physics"}, {"name": "СНК \"Квантовая физика\"", "type": "СНК", "direction": "Физика", "description": "Изучаем квантовые явления и проводим эксперименты", "contacts": "@quantum_physics"}, {"name": "СНО \"Робототехника\"", "type": "СНО", "direction": "IT, Инженерия", "description": "Собираем роботов, участвуем в соревнованиях", "contacts": "@robotics_team"}, {"name": "СНК \"Биохимия\"", "type": "СНК", "direction": "Биология, Химия", "description": "Исследования на стыке биологии и химии", "contacts": "@biochemistry_lab"}];
+        // Данные прямо в коде
+        const unions = [
+            {
+                name: "СНК Программирование Python",
+                type: "СНК",
+                direction: "IT",
+                description: "Изучаем Python, создаём проекты, участвуем в хакатонах",
+                contacts: "@python_professor"
+            },
+            {
+                name: "СНО Молекулярная биология",
+                type: "СНО",
+                direction: "Биология",
+                description: "Исследования в области биологии, работа в лабораториях",
+                contacts: "@bio_researcher"
+            },
+            {
+                name: "СНК Квантовая физика",
+                type: "СНК",
+                direction: "Физика",
+                description: "Изучение квантовых явлений, эксперименты",
+                contacts: "@quantum_physics"
+            }
+        ];
+
         const container = document.getElementById('container');
-        data.forEach(u => {
+        container.innerHTML = '';
+
+        unions.forEach(u => {
             const card = document.createElement('div');
             card.className = 'card';
             card.innerHTML = `
