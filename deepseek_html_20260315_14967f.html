@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Научные кружки</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
+        .card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+        .title { font-size: 18px; font-weight: bold; }
+        .type { background: #40a7e3; color: white; padding: 4px 8px; border-radius: 6px; font-size: 12px; display: inline-block; margin-right: 8px; }
+        .direction { background: #e0e0e0; padding: 4px 8px; border-radius: 6px; font-size: 12px; display: inline-block; }
+    </style>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <h1>🔬 Научные объединения</h1>
+    <div id="container">Загрузка...</div>
+    <script>
+        const tg = Telegram.WebApp;
+        tg.expand();
+
+        fetch('data.json') // файл с данными лежит рядом
+            .then(response => response.json())
+            .then(unions => {
+                const container = document.getElementById('container');
+                container.innerHTML = '';
+                if (unions.length === 0) {
+                    container.innerHTML = 'Пока нет кружков';
+                    return;
+                }
+                unions.forEach(u => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <div class="title">${u.name}</div>
+                        <span class="type">${u.type}</span>
+                        <span class="direction">${u.direction}</span>
+                        <p>${u.description}</p>
+                        <p>👤 ${u.contacts}</p>
+                    `;
+                    container.appendChild(card);
+                });
+            })
+            .catch(err => {
+                document.getElementById('container').innerHTML = 'Ошибка загрузки данных';
+            });
+    </script>
+</body>
+</html>
