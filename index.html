@@ -17,34 +17,43 @@
     <h1>🔬 Научные объединения</h1>
     <div id="container">Загрузка...</div>
     <script>
-        const tg = Telegram.WebApp;
-        tg.expand();
+    // Показываем ошибки на экране
+    window.onerror = function(msg, url, line) {
+        document.body.innerHTML = '<h2>Ошибка:</h2><pre>' + msg + '\nна строке ' + line + '</pre>';
+        return true;
+    };
 
-        fetch('data.json') // файл с данными лежит рядом
-            .then(response => response.json())
-            .then(unions => {
-                const container = document.getElementById('container');
-                container.innerHTML = '';
-                if (unions.length === 0) {
-                    container.innerHTML = 'Пока нет кружков';
-                    return;
-                }
-                unions.forEach(u => {
-                    const card = document.createElement('div');
-                    card.className = 'card';
-                    card.innerHTML = `
-                        <div class="title">${u.name}</div>
-                        <span class="type">${u.type}</span>
-                        <span class="direction">${u.direction}</span>
-                        <p>${u.description}</p>
-                        <p>👤 ${u.contacts}</p>
-                    `;
-                    container.appendChild(card);
-                });
-            })
-            .catch(err => {
-                document.getElementById('container').innerHTML = 'Ошибка загрузки данных';
+    const tg = Telegram.WebApp;
+    tg.expand();
+
+    fetch('data.json')
+        .then(r => {
+            if (!r.ok) throw new Error('HTTP ошибка ' + r.status);
+            return r.json();
+        })
+        .then(data => {
+            const container = document.getElementById('container');
+            container.innerHTML = '';
+            if (data.length === 0) {
+                container.innerHTML = 'Пока нет кружков 😢';
+                return;
+            }
+            data.forEach(u => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="title">${u.name}</div>
+                    <span class="type">${u.type}</span>
+                    <span class="direction">${u.direction}</span>
+                    <p>${u.description}</p>
+                    <p>👤 ${u.contacts}</p>
+                `;
+                container.appendChild(card);
             });
+        })
+        .catch(err => {
+            document.body.innerHTML = '<h2>Ошибка загрузки:</h2><pre>' + err.message + '</pre>';
+        });
     </script>
 </body>
 </html>
