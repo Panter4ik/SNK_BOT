@@ -20,6 +20,9 @@
     <div id="error"></div>
 
     <script>
+        if (typeof Telegram === 'undefined') {
+    document.getElementById('error').innerHTML = 'Telegram API не загружен!';
+}
        // Ловим ошибки
     window.onerror = function(msg, url, line) {
         document.getElementById('error').innerHTML = 'Ошибка: ' + msg + ' строка ' + line;
