@@ -1,59 +1,136 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Научные кружки</title>
+    <title>🔬 Научные объединения</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
-        .card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
-        .title { font-size: 18px; font-weight: bold; }
-        .type { background: #40a7e3; color: white; padding: 4px 8px; border-radius: 6px; font-size: 12px; display: inline-block; margin-right: 8px; }
-        .direction { background: #e0e0e0; padding: 4px 8px; border-radius: 6px; font-size: 12px; display: inline-block; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 16px;
+            background: #f5f5f5;
+            color: #000;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .type {
+            display: inline-block;
+            background: #40a7e3;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-right: 8px;
+        }
+        .direction {
+            display: inline-block;
+            background: #e0e0e0;
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+        .description {
+            margin-top: 12px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .contacts {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #666;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
     </style>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
     <h1>🔬 Научные объединения</h1>
     <div id="container">Загрузка...</div>
+
     <script>
-    // Показываем ошибки на экране
-    window.onerror = function(msg, url, line) {
-        document.body.innerHTML = '<h2>Ошибка:</h2><pre>' + msg + '\nна строке ' + line + '</pre>';
-        return true;
-    };
+        (function() {
+            // Перехват ошибок и вывод на экран
+            window.onerror = function(msg, url, line) {
+                document.getElementById('container').innerHTML = 
+                    '<p class="error">❌ Ошибка: ' + msg + '<br>на строке ' + line + '</p>';
+                return true;
+            };
 
-    const tg = Telegram.WebApp;
-    tg.expand();
-
-    fetch('data.json')
-        .then(r => {
-            if (!r.ok) throw new Error('HTTP ошибка ' + r.status);
-            return r.json();
-        })
-        .then(data => {
-            const container = document.getElementById('container');
-            container.innerHTML = '';
-            if (data.length === 0) {
-                container.innerHTML = 'Пока нет кружков 😢';
-                return;
+            const tg = window.Telegram?.WebApp;
+            if (tg) {
+                tg.expand();
+            } else {
+                console.warn('Telegram WebApp не доступен, работаем вне Telegram');
             }
-            data.forEach(u => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `
-                    <div class="title">${u.name}</div>
-                    <span class="type">${u.type}</span>
-                    <span class="direction">${u.direction}</span>
-                    <p>${u.description}</p>
-                    <p>👤 ${u.contacts}</p>
-                `;
-                container.appendChild(card);
-            });
-        })
-        .catch(err => {
-            document.body.innerHTML = '<h2>Ошибка загрузки:</h2><pre>' + err.message + '</pre>';
-        });
+
+            // Функция загрузки данных
+            async function loadData() {
+                const container = document.getElementById('container');
+                try {
+                    // Пытаемся загрузить data.json с абсолютным путём (на случай поддомена)
+                    const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/');
+                    const response = await fetch(baseUrl + 'data.json');
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    const data = await response.json();
+                    
+                    container.innerHTML = '';
+                    if (!data || data.length === 0) {
+                        container.innerHTML = '<p>Пока нет кружков 😢</p>';
+                        return;
+                    }
+
+                    data.forEach(union => {
+                        const card = document.createElement('div');
+                        card.className = 'card';
+                        card.innerHTML = `
+                            <div class="title">${escapeHtml(union.name || 'Без названия')}</div>
+                            <span class="type">${escapeHtml(union.type || 'Тип')}</span>
+                            <span class="direction">${escapeHtml(union.direction || 'Направление')}</span>
+                            <div class="description">${escapeHtml(union.description || '')}</div>
+                            <div class="contacts">👤 ${escapeHtml(union.contacts || '')}</div>
+                        `;
+                        container.appendChild(card);
+                    });
+                } catch (error) {
+                    container.innerHTML = `<p class="error">❌ Ошибка загрузки: ${escapeHtml(error.message)}</p>`;
+                    console.error(error);
+                }
+            }
+
+            // Простейшая защита от XSS
+            function escapeHtml(unsafe) {
+                if (!unsafe) return '';
+                return unsafe
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            loadData();
+        })();
     </script>
 </body>
 </html>
