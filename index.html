@@ -20,51 +20,37 @@
     <div id="error"></div>
 
     <script>
-        // Ловим все непойманные ошибки промисов
-        window.addEventListener('unhandledrejection', function(event) {
-            document.getElementById('error').innerHTML = 'Ошибка: ' + (event.reason?.message || JSON.stringify(event.reason));
-            console.error('Unhandled rejection:', event.reason);
-        });
+       // Ловим ошибки
+    window.onerror = function(msg, url, line) {
+        document.getElementById('error').innerHTML = 'Ошибка: ' + msg + ' строка ' + line;
+        return true;
+    };
 
-        // Ловим обычные ошибки
-        window.onerror = function(msg, url, line) {
-            document.getElementById('error').innerHTML = 'Ошибка: ' + msg + ' на строке ' + line;
-            return true;
-        };
+    const tg = Telegram.WebApp;
+    tg.expand();
 
-        const tg = Telegram.WebApp;
-        tg.expand();
+    // Встроенные данные
+    const data = [
+        { name: "СНК Программирование Python", type: "СНК", direction: "IT", description: "Изучаем Python, создаём проекты", contacts: "@python_professor" },
+        { name: "СНО Молекулярная биология", type: "СНО", direction: "Биология", description: "Исследования в области биологии", contacts: "@bio_researcher" },
+        { name: "СНК Квантовая физика", type: "СНК", direction: "Физика", description: "Изучение квантовых явлений", contacts: "@quantum_physics" }
+    ];
 
-        // Используем полный URL для надёжности
-        fetch('https://panter4ik.github.io/SNK_BOT/data.json')
-            .then(r => {
-                if (!r.ok) throw new Error(`HTTP ошибка ${r.status}`);
-                return r.json();
-            })
-            .then(data => {
-                const container = document.getElementById('container');
-                container.innerHTML = '';
-                if (data.length === 0) {
-                    container.innerHTML = 'Пока нет кружков 😢';
-                    return;
-                }
-                data.forEach(u => {
-                    const card = document.createElement('div');
-                    card.className = 'card';
-                    card.innerHTML = `
-                        <div class="title">${u.name}</div>
-                        <span class="type">${u.type}</span>
-                        <span class="direction">${u.direction}</span>
-                        <p>${u.description}</p>
-                        <p>👤 ${u.contacts}</p>
-                    `;
-                    container.appendChild(card);
-                });
-            })
-            .catch(err => {
-                document.getElementById('container').innerHTML = '';
-                document.getElementById('error').innerHTML = 'Ошибка загрузки данных: ' + err.message;
-            });
+    const container = document.getElementById('container');
+    container.innerHTML = '';
+
+    data.forEach(u => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+            <div class="title">${u.name}</div>
+            <span class="type">${u.type}</span>
+            <span class="direction">${u.direction}</span>
+            <p>${u.description}</p>
+            <p>👤 ${u.contacts}</p>
+        `;
+        container.appendChild(card);
+    });
     </script>
 </body>
 </html>
