@@ -3,142 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Научные кружки</title>
+    <title>🔬 Научные кружки</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: #f5f5f5;
-            color: #000;
-        }
-        h1 {
-            font-size: 24px;
-            margin-bottom: 20px;
-            color: #333;
-        }
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #000;
-        }
-        .type {
-            display: inline-block;
-            background: #40a7e3;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 12px;
-            margin-right: 8px;
-        }
-        .direction {
-            display: inline-block;
-            background: #e0e0e0;
-            color: #000;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 12px;
-        }
-        .description {
-            margin-top: 12px;
-            font-size: 14px;
-            line-height: 1.4;
-            color: #444;
-        }
-        .contacts {
-            margin-top: 12px;
-            font-size: 13px;
-            color: #666;
-        }
-        #debug {
-            background: #ffebee;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            color: #c62828;
-            display: none;
-            white-space: pre-wrap;
-            font-family: monospace;
-        }
+        body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
+        .card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .title { font-size: 18px; font-weight: bold; }
+        .type { background: #40a7e3; color: white; padding: 4px 8px; border-radius: 6px; font-size: 12px; display: inline-block; margin-right: 8px; }
+        .direction { background: #e0e0e0; padding: 4px 8px; border-radius: 6px; font-size: 12px; display: inline-block; }
+        #error { color: red; font-weight: bold; }
     </style>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-    <div id="debug"></div>
     <h1>🔬 Научные объединения</h1>
     <div id="container">Загрузка...</div>
+    <div id="error"></div>
 
     <script>
-        // Функция для отображения ошибок на странице
-        function showError(text) {
-            const debug = document.getElementById('debug');
-            debug.style.display = 'block';
-            debug.textContent = '❌ Ошибка: ' + text;
-        }
+        // Ловим все непойманные ошибки промисов
+        window.addEventListener('unhandledrejection', function(event) {
+            document.getElementById('error').innerHTML = 'Ошибка: ' + (event.reason?.message || JSON.stringify(event.reason));
+            console.error('Unhandled rejection:', event.reason);
+        });
 
-        // Отлавливаем все непойманные ошибки
+        // Ловим обычные ошибки
         window.onerror = function(msg, url, line) {
-            showError(msg + ' на строке ' + line);
+            document.getElementById('error').innerHTML = 'Ошибка: ' + msg + ' на строке ' + line;
             return true;
         };
 
-        // Проверяем, загрузился ли Telegram API
-        if (typeof Telegram === 'undefined') {
-            showError('Telegram API не загрузился. Проверь подключение.');
-        } else {
-            try {
-                Telegram.WebApp.expand();
-                console.log('Telegram WebApp расширен');
-            } catch (e) {
-                showError('Ошибка при расширении Telegram WebApp: ' + e.message);
-            }
-        }
+        const tg = Telegram.WebApp;
+        tg.expand();
 
-        // Загружаем данные
-        async function loadData() {
-            try {
-                const response = await fetch('data.json?' + Date.now()); // Добавляем timestamp, чтобы избежать кэша
-                if (!response.ok) {
-                    throw new Error(`HTTP ошибка ${response.status}`);
-                }
-                const data = await response.json();
-                console.log('Данные загружены:', data);
-
+        // Используем полный URL для надёжности
+        fetch('https://panter4ik.github.io/SNK_BOT/data.json')
+            .then(r => {
+                if (!r.ok) throw new Error(`HTTP ошибка ${r.status}`);
+                return r.json();
+            })
+            .then(data => {
                 const container = document.getElementById('container');
                 container.innerHTML = '';
-
-                if (!data || data.length === 0) {
+                if (data.length === 0) {
                     container.innerHTML = 'Пока нет кружков 😢';
                     return;
                 }
-
-                data.forEach(item => {
+                data.forEach(u => {
                     const card = document.createElement('div');
                     card.className = 'card';
                     card.innerHTML = `
-                        <div class="title">${item.name || 'Без названия'}</div>
-                        <span class="type">${item.type || 'Не указан'}</span>
-                        <span class="direction">${item.direction || 'Не указано'}</span>
-                        <div class="description">${item.description || 'Описание отсутствует'}</div>
-                        <div class="contacts">👤 ${item.contacts || 'Нет контактов'}</div>
+                        <div class="title">${u.name}</div>
+                        <span class="type">${u.type}</span>
+                        <span class="direction">${u.direction}</span>
+                        <p>${u.description}</p>
+                        <p>👤 ${u.contacts}</p>
                     `;
                     container.appendChild(card);
                 });
-            } catch (error) {
-                console.error('Ошибка загрузки:', error);
-                showError('Не удалось загрузить данные: ' + error.message);
-            }
-        }
-
-        loadData();
+            })
+            .catch(err => {
+                document.getElementById('container').innerHTML = '';
+                document.getElementById('error').innerHTML = 'Ошибка загрузки данных: ' + err.message;
+            });
     </script>
 </body>
 </html>
